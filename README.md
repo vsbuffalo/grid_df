@@ -202,3 +202,9 @@ shape: (8, 6)
 └────────┴────────┴───────┴─────────────────────────────────┴────────┴──────┘
 ```
 
+A format string for the paths, e.g. for Snakemake, can be accessed with
+
+```python
+>>> grid.path_pattern()
+'results/group__{group}/data___{param1}___{param2}.tsv'
+```

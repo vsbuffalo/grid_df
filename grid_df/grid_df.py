@@ -205,7 +205,7 @@ class GridDf:
             raise ValueError(msg)
         self.params = params
         self.df = None
-        self.queried_df = None
+        self.filename_patterns = None
         self.nreps = None
         self.seed = random_seed(None) if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
@@ -343,6 +343,49 @@ class GridDf:
         self.df = self.df.filter(*predicates, **constraints)
         return self
 
+
+    def path_pattern(self):
+        """
+        Generate the path pattern format string based on filename patterns.
+
+        Args:
+            filename_patterns (str or list): A string or list of strings representing the filename pattern(s).
+            dir (str, optional): The base directory for the generated paths. Defaults to None.
+            sep (str, optional): The separator used between the key and value in the generated paths. Defaults to "__".
+
+        Returns:
+            str: The path pattern format string.
+        """
+        self._ensure_cross_generated("path_pattern")
+        sep = self.sep
+        dir = self.dir
+
+        # Get the keys in the filename part of path
+        filename_patterns = parse_filename_patterns(self.filename_patterns)
+        filename_cols = extract_columns(filename_patterns)
+
+        # Get the keys in the directory part of path
+        dir_keys = [key for key in self.df.columns if key not in filename_cols and key not in RESERVED]
+
+        if dir is None:
+            dir_path = (
+                ""
+                if not dir_keys
+                else os.path.join(*[f"{key}{sep}{{{key}}}" for key in dir_keys])
+            )
+        else:
+            dir_path = (
+                dir
+                if not dir_keys
+                else os.path.join(dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys])
+            )
+
+        filename_pattern = filename_patterns[0]  # Assuming only one filename pattern is provided
+        filename_format = re.sub(r"\{(.*?)\}", rf"{sep}{{\1}}", filename_pattern)
+
+        path_pattern = os.path.join(dir_path, filename_format)
+        return path_pattern
+
     def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__"):
         """
         Generate paths based on filename patterns. This will *not* propagate the
@@ -410,6 +453,8 @@ class GridDf:
 
         paths_df = pl.DataFrame(row_list)
         self.df = paths_df
+        self.filename_patterns = filename_patterns
+        self.sep = sep
         return self
 
     def query_files(self):
@@ -575,5 +620,6 @@ if __name__ == "__main__":
         assert summary == expected_summary
 
         grid.query_files()
-        print(grid.df)
+        print(grid.path_pattern())
+        # print(grid.df)
 
