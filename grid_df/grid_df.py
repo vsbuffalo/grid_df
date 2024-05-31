@@ -277,7 +277,7 @@ class GridDf:
             f" Parameters:\n{param_str}"
         )
 
-        if self.df is not None:
+        if self.df is not None and "exists" in self.df.columns:
             summary = self.summarize_files(self.df)
             repr_str += (
                 f"\n\n Files Summary:\n"
@@ -439,7 +439,7 @@ class GridDf:
             split_filename (bool, optional): If True, split the directory part and the file path. Defaults to False.
 
         Returns:
-            DataFrame: A DataFrame containing the full paths and the row dictionaries.
+            GridDf
         """
         self._ensure_cross_generated("generate_paths_df")
         paths = list(self.generate_path_items(filename_patterns, dir, sep))
@@ -463,7 +463,7 @@ class GridDf:
         Check if files exist and get their sizes, returning a DataFrame with this information.
 
         returns:
-            DataFrame: a DataFrame containing the file paths, existence, and sizes.
+            GridDf
         """
         dir = self.dir
         paths = self._ensure_paths()
