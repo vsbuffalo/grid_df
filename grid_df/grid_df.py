@@ -528,10 +528,10 @@ class GridDf:
 
         results = [
             func(row["path"]) if row["exists"] else None
-            for row in self.df.to_dict(as_series=False)
+            for row in self.df.iter_rows(named=True)
         ]
 
-        self.df = self.df.with_column(pl.Series(column_name, results))
+        self.df = self.df.with_columns(pl.Series(column_name, results))
         return self
 
 
