@@ -351,10 +351,9 @@ class GridDf:
 
         Args:
             filename_patterns (str or list): A string or list of strings representing the filename pattern(s).
-            sep (str, optional): The separator used between the key and value in the generated paths. Defaults to "__".
 
         Returns:
-            str: The path pattern format string.
+            list: A list of path pattern format strings.
         """
         self._ensure_cross_generated("path_pattern")
         sep = self.sep
@@ -368,24 +367,26 @@ class GridDf:
         # Get the keys in the directory part of path
         dir_keys = [key for key in self.df.columns if key not in filename_cols and key not in RESERVED]
 
-        if dir is None:
-            dir_path = (
-                ""
-                if not dir_keys
-                else os.path.join(*[f"{key}{sep}{{{key}}}" for key in dir_keys])
-            )
-        else:
-            dir_path = (
-                dir
-                if not dir_keys
-                else os.path.join(dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys])
-            )
+        path_patterns = []
+        for pattern in sorted(filename_patterns):
+            if dir is None:
+                dir_path = (
+                    ""
+                    if not dir_keys
+                    else os.path.join(*[f"{key}{sep}{{{key}}}" for key in dir_keys])
+                )
+            else:
+                dir_path = (
+                    dir
+                    if not dir_keys
+                    else os.path.join(dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys])
+                )
 
-        filename_pattern = filename_patterns[0]  # Assuming only one filename pattern is provided
-        filename_format = re.sub(r"\{(.*?)\}", rf"{sep}{{\1}}", filename_pattern)
+            filename_format = re.sub(r"\{(.*?)\}", rf"\1{sep}{{\1}}", pattern)
+            path_pattern = os.path.join(dir_path, filename_format)
+            path_patterns.append(path_pattern)
 
-        path_pattern = os.path.join(dir_path, filename_format)
-        return path_pattern
+        return path_patterns
 
     def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__"):
         """
