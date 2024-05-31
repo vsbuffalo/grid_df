@@ -391,7 +391,7 @@ class GridDf:
     def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__"):
         """
         Generate paths based on filename patterns. This will *not* propagate the
-        GridDf.df. If dir is specified, this will overwrite the existing attribute.
+        GridDf.df. If dir is specified as *not* None, this will overwrite the existing attribute.
 
         Args:
             filename_patterns (str or list): A string or list of strings representing the filename pattern(s).
@@ -403,8 +403,9 @@ class GridDf:
         """
         self._ensure_cross_generated("generate_paths")
         self.sep = sep
-        self.dir = dir
-        paths = generate_paths(self.df, filename_patterns, dir, sep)
+        if dir is not None:
+            self.dir = dir
+        paths = generate_paths(self.df, filename_patterns, self.dir, sep)
         return paths
 
     def _ensure_paths(self):
@@ -443,7 +444,9 @@ class GridDf:
             GridDf
         """
         self._ensure_cross_generated("generate_paths_df")
-        paths = list(self.generate_path_items(filename_patterns, dir, sep))
+        if dir is not None:
+            self.dir = dir
+        paths = list(self.generate_path_items(filename_patterns, self.dir, sep))
 
         row_list = []
         for path, row in paths:
