@@ -191,7 +191,7 @@ def random_seed(rng=None):
 
 
 class GridDf:
-    def __init__(self, params: dict, seed: int = None):
+    def __init__(self, params: dict, seed: int = None, dir: str = None):
         """
         Initialize the GridDf object.
 
@@ -206,6 +206,7 @@ class GridDf:
         self.params = params
         self.df = None
         self.filename_patterns = None
+        self.dir = dir
         self.nreps = None
         self.seed = random_seed(None) if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
@@ -344,13 +345,12 @@ class GridDf:
         return self
 
 
-    def path_pattern(self):
+    def path_pattern(self, filename_patterns=None):
         """
         Generate the path pattern format string based on filename patterns.
 
         Args:
             filename_patterns (str or list): A string or list of strings representing the filename pattern(s).
-            dir (str, optional): The base directory for the generated paths. Defaults to None.
             sep (str, optional): The separator used between the key and value in the generated paths. Defaults to "__".
 
         Returns:
@@ -361,7 +361,8 @@ class GridDf:
         dir = self.dir
 
         # Get the keys in the filename part of path
-        filename_patterns = parse_filename_patterns(self.filename_patterns)
+        filename_patterns = self.filename_patterns if filename_patterns is None else filename_patterns
+        filename_patterns = parse_filename_patterns(filename_patterns)
         filename_cols = extract_columns(filename_patterns)
 
         # Get the keys in the directory part of path
@@ -389,7 +390,7 @@ class GridDf:
     def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__"):
         """
         Generate paths based on filename patterns. This will *not* propagate the
-        GridDf.df.
+        GridDf.df. If dir is specified, this will overwrite the existing attribute.
 
         Args:
             filename_patterns (str or list): A string or list of strings representing the filename pattern(s).
