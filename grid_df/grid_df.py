@@ -100,7 +100,7 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def generate_paths(df, filename_patterns, directory=None, sep="__"):
+def generate_paths(df, filename_patterns, directory=None, sep="__", filename_sep="_"):
     """
     Generate paths based on filename patterns.
 
@@ -149,7 +149,7 @@ def generate_paths(df, filename_patterns, directory=None, sep="__"):
                 filename_part = f"{col}{sep}{value}"
                 filename_parts.append(filename_part)
             filename = pattern.format(
-                **{col: f"{col}{sep}{row[col]}" for col in filename_cols}
+                **{col: f"{col}{filename_sep}{row[col]}" for col in filename_cols}
             )
             full_path = os.path.join(dir_path, filename)
             yield full_path, row
@@ -345,7 +345,7 @@ class GridDf:
         return self
 
 
-    def path_pattern(self, filename_patterns=None):
+    def path_pattern(self, filename_patterns=None, filename_sep="_"):
         """
         Generate the path pattern format string based on filename patterns.
 
@@ -382,13 +382,13 @@ class GridDf:
                     else os.path.join(dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys])
                 )
 
-            filename_format = re.sub(r"\{(.*?)\}", rf"\1{sep}{{\1}}", pattern)
+            filename_format = re.sub(r"\{(.*?)\}", rf"\1{filename_sep}{{\1}}", pattern)
             path_pattern = os.path.join(dir_path, filename_format)
             path_patterns.append(path_pattern)
 
         return path_patterns
 
-    def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__"):
+    def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__", filename_sep = "_"):
         """
         Generate paths based on filename patterns. This will *not* propagate the
         GridDf.df. If dir is specified as *not* None, this will overwrite the existing attribute.
@@ -405,7 +405,7 @@ class GridDf:
         self.sep = sep
         if dir is not None:
             self.dir = dir
-        paths = generate_paths(self.df, filename_patterns, self.dir, sep)
+        paths = generate_paths(self.df, filename_patterns, self.dir, sep, filename_sep=filename_sep)
         return paths
 
     def _ensure_paths(self):
@@ -430,6 +430,7 @@ class GridDf:
         dir: str = None,
         sep: str = "__",
         split_filename=False,
+        filename_sep: str = "_",
     ):
         """
         Generate paths based on filename patterns and return as a DataFrame.
@@ -446,7 +447,7 @@ class GridDf:
         self._ensure_cross_generated("generate_paths_df")
         if dir is not None:
             self.dir = dir
-        paths = list(self.generate_path_items(filename_patterns, self.dir, sep))
+        paths = list(self.generate_path_items(filename_patterns, self.dir, sep, filename_sep=filename_sep))
 
         row_list = []
         for path, row in paths:
