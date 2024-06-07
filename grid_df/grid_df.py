@@ -119,7 +119,6 @@ def generate_paths(df, filename_patterns, directory=None, sep="__", filename_sep
 
     # get the keys in the directory part of path
     dir_keys = [key for key in df.columns if key not in filename_cols and key not in RESERVED]
-    print(dir_keys, df.columns, filename_cols)
 
     df = df.clone()
     if 'size' in df.columns:
@@ -213,7 +212,7 @@ class GridDf:
         self.sep = None
 
     @staticmethod
-    def from_tsv(filepath):
+    def from_tsv(filepath, dir=None):
         """
         Load parameters from a TSV file and deduce the parameters.
 
@@ -231,7 +230,7 @@ class GridDf:
             else:
                 raise ValueError("TSV file does not contain serialized parameters as a comment line.")
         df = pl.read_csv(filepath, separator="\t", skip_rows=1)
-        grid = GridDf(params)
+        grid = GridDf(params, dir=dir)
         grid.df = df
         return grid
 
@@ -463,7 +462,7 @@ class GridDf:
         self.sep = sep
         return self
 
-    def query_files(self):
+    def query_files(self, local_dir=None):
         """
         Check if files exist and get their sizes, returning a DataFrame with this information.
 
@@ -475,11 +474,16 @@ class GridDf:
 
         exists = []
         sizes = []
+        new_paths = [] 
         for path in paths:
+            if local_dir is not None:
+                path = os.path.join(local_dir, path)
             exists.append(os.path.exists(path))
             sizes.append(os.path.getsize(path) if os.path.exists(path) else None)
+            new_paths.append(path)
 
         self.df = self.df.with_columns([
+            pl.Series("path", new_paths),
             pl.Series("exists", exists),
             pl.Series("size", sizes)
         ])
