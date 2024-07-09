@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grid_df"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Vince Buffalo <vsbuffalo@gmail.com>"]
 readme = "README.md"

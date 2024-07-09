@@ -312,7 +312,7 @@ class GridDf:
                     if use_seed:
                         row_copy["seed"] = random_seed(self.rng)
                     else:
-                        row_copy["replicate"] = rep + 1
+                        row_copy["seed"] = rep
                     replicated_data.append(row_copy)
             expanded_data = replicated_data
 
