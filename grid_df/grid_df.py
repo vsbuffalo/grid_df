@@ -288,7 +288,7 @@ class GridDf:
 
         return repr_str
 
-    def cross_product(self, nreps=None, use_seed=True):
+    def cross_product(self, nreps=None, use_seed=False):
         """
         Compute the Cartesian product of all columns of this `GridDf`,
         returning them in a new `GridDf`. Includes repetitions and seeding.
@@ -297,7 +297,10 @@ class GridDf:
             nreps (int, optional): The number of repetitions for each parameter combination.
                                    Defaults to None, which means no repetitions.
             use_seed (bool, optional): If True, add a unique seed for each repetition. If False,
-                                       add a replicate number instead. Defaults to True.
+                                       add a replicate number instead. Defaults to False. If runs
+                                       may be added later, it is recommended this is set to False, 
+                                       since this guarantees that past files have the same seed and
+                                       thus can be re-used.
 
         Returns:
             GridDf: The updated GridDf object with the cross product computed.
