@@ -15,7 +15,7 @@ from polars.type_aliases import (
     IntoExprColumn,
 )
 
-RESERVED = ('path', 'size', 'exists')
+RESERVED = ("path", "size", "exists")
 
 
 def parse_filename_patterns(filename_pattern):
@@ -93,6 +93,7 @@ def expand_params(params):
     expanded_data = [dict(zip(keys, combination)) for combination in product]
     return expanded_data
 
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
@@ -118,14 +119,16 @@ def generate_paths(df, filename_patterns, directory=None, sep="__", filename_sep
     filename_cols = extract_columns(filename_patterns)
 
     # get the keys in the directory part of path
-    dir_keys = [key for key in df.columns if key not in filename_cols and key not in RESERVED]
+    dir_keys = [
+        key for key in df.columns if key not in filename_cols and key not in RESERVED
+    ]
 
     df = df.clone()
-    if 'size' in df.columns:
+    if "size" in df.columns:
         # handle the possibility the size column may be all nulls,
         # which messes up sorting
         df = df.with_columns(pl.col("size").fill_null(value=0))
-    for row in (df.sort(by=df.columns).iter_rows(named=True)):
+    for row in df.sort(by=df.columns).iter_rows(named=True):
         if directory is None:
             dir_path = (
                 ""
@@ -199,8 +202,10 @@ class GridDf:
             seed (int, optional): A seed for random number generation. Defaults to None.
         """
         if not isinstance(params, dict):
-            msg = ("Argument 'params' must be a dict (perhaps "
-                   "you mean to use GridDf.from_tsv()?).")
+            msg = (
+                "Argument 'params' must be a dict (perhaps "
+                "you mean to use GridDf.from_tsv()?)."
+            )
             raise ValueError(msg)
         self.params = params
         self.df = None
@@ -222,14 +227,18 @@ class GridDf:
         Returns:
             GridDf: The updated GridDf object with parameters loaded from the TSV file.
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             first_line = f.readline().strip()
-            if first_line.startswith('#'):
+            if first_line.startswith("#"):
                 serialized_params = first_line.lstrip("# params: ").strip()
                 params = json.loads(serialized_params)
             else:
-                raise ValueError("TSV file does not contain serialized parameters as a comment line.")
-        df = pl.read_csv(filepath, separator="\t", skip_rows=1)
+                raise ValueError(
+                    "TSV file does not contain serialized parameters as a comment line."
+                )
+        df = pl.read_csv(
+            filepath, separator="\t", skip_rows=1, infer_schema_length=1000
+        )
         grid = GridDf(params, dir=dir)
         grid.df = df
         return grid
@@ -243,10 +252,9 @@ class GridDf:
         self._ensure_cross_generated("write_tsv")
         serialized_params = json.dumps(self.params, cls=NumpyEncoder)
         comment_line = f"# params: {serialized_params}\n"
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(comment_line)
             f.write(self.df.write_csv(separator="\t"))
-
 
     def __repr__(self):
         """
@@ -257,7 +265,8 @@ class GridDf:
         """
         param_strs = [
             f"   {key} ∈ {{{', '.join(map(str, values))}}}"
-            for key, values in self.params.items() if key not in RESERVED
+            for key, values in self.params.items()
+            if key not in RESERVED
         ]
         param_str = "\n".join(param_strs)
         seed_str = f"Seed: {self.seed}"
@@ -298,9 +307,8 @@ class GridDf:
                                    Defaults to None, which means no repetitions.
             use_seed (bool, optional): If True, add a unique seed for each repetition. If False,
                                        add a replicate number instead. Defaults to False. If runs
-                                       may be added later, it is recommended this is set to False, 
-                                       since this guarantees that past files have the same seed and
-                                       thus can be re-used.
+                                       may be added later, it is recommended this is set to False,
+                                       since this guarantees that past files have the same seed.
 
         Returns:
             GridDf: The updated GridDf object with the cross product computed.
@@ -346,7 +354,6 @@ class GridDf:
         self.df = self.df.filter(*predicates, **constraints)
         return self
 
-
     def path_pattern(self, filename_patterns=None, filename_sep="_"):
         """
         Generate the path pattern format string based on filename patterns.
@@ -362,12 +369,18 @@ class GridDf:
         dir = self.dir
 
         # Get the keys in the filename part of path
-        filename_patterns = self.filename_patterns if filename_patterns is None else filename_patterns
+        filename_patterns = (
+            self.filename_patterns if filename_patterns is None else filename_patterns
+        )
         filename_patterns = parse_filename_patterns(filename_patterns)
         filename_cols = extract_columns(filename_patterns)
 
         # Get the keys in the directory part of path
-        dir_keys = [key for key in self.df.columns if key not in filename_cols and key not in RESERVED]
+        dir_keys = [
+            key
+            for key in self.df.columns
+            if key not in filename_cols and key not in RESERVED
+        ]
 
         path_patterns = []
         for pattern in sorted(filename_patterns):
@@ -381,7 +394,9 @@ class GridDf:
                 dir_path = (
                     dir
                     if not dir_keys
-                    else os.path.join(dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys])
+                    else os.path.join(
+                        dir, *[f"{key}{sep}{{{key}}}" for key in dir_keys]
+                    )
                 )
 
             filename_format = re.sub(r"\{(.*?)\}", rf"\1{filename_sep}{{\1}}", pattern)
@@ -390,7 +405,9 @@ class GridDf:
 
         return path_patterns
 
-    def generate_path_items(self, filename_patterns, dir: str = None, sep: str = "__", filename_sep = "_"):
+    def generate_path_items(
+        self, filename_patterns, dir: str = None, sep: str = "__", filename_sep="_"
+    ):
         """
         Generate paths based on filename patterns. This will *not* propagate the
         GridDf.df. If dir is specified as *not* None, this will overwrite the existing attribute.
@@ -407,16 +424,19 @@ class GridDf:
         self.sep = sep
         if dir is not None:
             self.dir = dir
-        paths = generate_paths(self.df, filename_patterns, self.dir, sep, filename_sep=filename_sep)
+        paths = generate_paths(
+            self.df, filename_patterns, self.dir, sep, filename_sep=filename_sep
+        )
         return paths
 
     def _ensure_paths(self):
         try:
-            paths = self.df['path']
+            paths = self.df["path"]
         except pl.exceptions.ColumnNotFoundError:
-            raise ValueError("The internal dataframe does not have a 'path' column. Generate paths.")
+            raise ValueError(
+                "The internal dataframe does not have a 'path' column. Generate paths."
+            )
         return paths
-
 
     def paths(self):
         """
@@ -424,7 +444,6 @@ class GridDf:
         """
         paths = self._ensure_paths()
         return paths
-
 
     def generate_paths(
         self,
@@ -449,7 +468,11 @@ class GridDf:
         self._ensure_cross_generated("generate_paths_df")
         if dir is not None:
             self.dir = dir
-        paths = list(self.generate_path_items(filename_patterns, self.dir, sep, filename_sep=filename_sep))
+        paths = list(
+            self.generate_path_items(
+                filename_patterns, self.dir, sep, filename_sep=filename_sep
+            )
+        )
 
         row_list = []
         for path, row in paths:
@@ -477,7 +500,7 @@ class GridDf:
 
         exists = []
         sizes = []
-        new_paths = [] 
+        new_paths = []
         for path in paths:
             if local_dir is not None:
                 path = os.path.join(local_dir, path)
@@ -485,11 +508,13 @@ class GridDf:
             sizes.append(os.path.getsize(path) if os.path.exists(path) else None)
             new_paths.append(path)
 
-        self.df = self.df.with_columns([
-            pl.Series("path", new_paths),
-            pl.Series("exists", exists),
-            pl.Series("size", sizes)
-        ])
+        self.df = self.df.with_columns(
+            [
+                pl.Series("path", new_paths),
+                pl.Series("exists", exists),
+                pl.Series("size", sizes),
+            ]
+        )
 
         return self
 
@@ -507,7 +532,9 @@ class GridDf:
         total_files = df.shape[0]
         existing_files = df.filter(pl.col("exists") == True).shape[0]
         missing_files = total_files - existing_files
-        total_size = df.filter(pl.col("exists") == True)["size"].fill_null(value=0).sum()
+        total_size = (
+            df.filter(pl.col("exists") == True)["size"].fill_null(value=0).sum()
+        )
 
         summary = {
             "total_files": total_files,
@@ -553,24 +580,24 @@ def create_temp_files(file_paths):
 # Example usage and testing
 if __name__ == "__main__":
     import tempfile
+
     def print_paths(paths):
         print("[", end="")
         for path in paths:
             print(f"{path},")
         print("]", end="")
 
-    data = {
-        'param1': [1, 2],
-        'param2': [3, 4],
-        'group': ['a', 'b']
-    }
+    data = {"param1": [1, 2], "param2": [3, 4], "group": ["a", "b"]}
 
     # Create temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         grid = GridDf(data).cross_product()
-        file_paths = [path for path, _ in 
-                      grid.generate_path_items("data_{param1}_{param2}.tsv",
-                                                                   dir=temp_dir)]
+        file_paths = [
+            path
+            for path, _ in grid.generate_path_items(
+                "data_{param1}_{param2}.tsv", dir=temp_dir
+            )
+        ]
 
         # Diagnostic print: Check generated paths
         print("Generated file paths:")
@@ -578,51 +605,63 @@ if __name__ == "__main__":
             print(path)
 
         # Create half the temp files
-        create_temp_files(file_paths[:len(file_paths)//2])  # Create half of the files
+        create_temp_files(
+            file_paths[: len(file_paths) // 2]
+        )  # Create half of the files
 
         # Diagnostic print: Check files created
         print("Files created:")
-        for path in file_paths[:len(file_paths)//2]:
+        for path in file_paths[: len(file_paths) // 2]:
             print(path, os.path.exists(path), os.path.getsize(path))
 
         # Get files
-        files_df = (grid
-                    .generate_paths("data_{param1}_{param2}.tsv", dir=temp_dir)
-                    .query_files().df)
+        files_df = (
+            grid.generate_paths("data_{param1}_{param2}.tsv", dir=temp_dir)
+            .query_files()
+            .df
+        )
         # Diagnostic print: Check files DataFrame
         print("Files DataFrame after querying:")
         print(files_df)
-        print(files_df['path'].to_list())
+        print(files_df["path"].to_list())
 
         # Check DataFrame
-        #for path, row in grid.generate_path_items("data_{param1}_{param2}.tsv",
+        # for path, row in grid.generate_path_items("data_{param1}_{param2}.tsv",
         #                                          dir=temp_dir):
         #    if os.path.exists(path):
         #        print(path, os.path.exists(path), os.path.getsize(path))
         #    else:
         #        print(f"does not exist: {path}")
 
-        expected_df = pl.DataFrame([
-            {**row, 'path': path,
-             'exists': os.path.exists(path),
-             'size': os.path.getsize(path) if os.path.exists(path) else None}
-            for path, row in grid.generate_path_items("data_{param1}_{param2}.tsv",
-                                                      dir=temp_dir)
-        ])
+        expected_df = pl.DataFrame(
+            [
+                {
+                    **row,
+                    "path": path,
+                    "exists": os.path.exists(path),
+                    "size": os.path.getsize(path) if os.path.exists(path) else None,
+                }
+                for path, row in grid.generate_path_items(
+                    "data_{param1}_{param2}.tsv", dir=temp_dir
+                )
+            ]
+        )
         # Diagnostic print: Check expected DataFrame
         print("Expected DataFrame:")
         print(expected_df)
 
-        cols = ['path', 'exists', 'size', 'param1', 'param2']
+        cols = ["path", "exists", "size", "param1", "param2"]
         assert files_df.select(cols).equals(expected_df.select(cols))
 
         # Summarize files
         summary = grid.summarize_files(files_df)
         expected_summary = {
-            'total_files': len(file_paths),
-            'existing_files': len(file_paths) // 2,
-            'missing_files': len(file_paths) // 2,
-            'total_size': sum(os.path.getsize(path) for path in file_paths[:len(file_paths)//2])
+            "total_files": len(file_paths),
+            "existing_files": len(file_paths) // 2,
+            "missing_files": len(file_paths) // 2,
+            "total_size": sum(
+                os.path.getsize(path) for path in file_paths[: len(file_paths) // 2]
+            ),
         }
         # Diagnostic print: Check summary and expected summary
         print("Summary:")
@@ -635,4 +674,3 @@ if __name__ == "__main__":
         grid.query_files()
         print(grid.path_pattern())
         # print(grid.df)
-
