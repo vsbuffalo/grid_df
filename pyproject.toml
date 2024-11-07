@@ -1,6 +1,6 @@
 [project]
 name = "grid_df"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = [
     {name = "Vince Buffalo", email = "vsbuffalo@gmail.com"}
