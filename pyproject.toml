@@ -1,27 +1,23 @@
-[tool.poetry]
+[project]
 name = "grid_df"
 version = "0.1.1"
 description = ""
-authors = ["Vince Buffalo <vsbuffalo@gmail.com>"]
+authors = [
+    {name = "Vince Buffalo", email = "vsbuffalo@gmail.com"}
+]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-polars = "^0.20.29"
-numpy = "^1.26.4"
-
-[tool.black]
-line-length = 88
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.1"
-ruff = "^0.4.5"
-black = "^24.4.2"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.1.3",
+    "polars>=1.12.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3",
+]
 

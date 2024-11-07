@@ -1,3 +1,6 @@
+![CI](https://github.com/vsbuffalo/grid_df/workflows/CI/badge.svg)
+[![PyPI version](https://badge.fury.io/py/grid_df.svg)](https://badge.fury.io/py/grid_df)
+
 # GridDf Documentation
 
 GridDf is a Python library and tool that simplifies running computational
@@ -87,10 +90,10 @@ of all results.
 When the right parameter combinations have been constructed, we then generate
 the file paths. The schema that is used is like
 `dir/theta__1/rho__0.001/filename_1928002274283433492.tsv`, where parameter
-keys and values are concatenated according to `sep` (default is `__`) to make the 
+keys and values are concatenated according to `sep` (default is `__`) to make the
 directory component. The user specifies the filename pattern, which *can* include
 *any* of the columns (including seed), but doesn't necessarily need to. The filename
-also can have many columns. All columns *not* in the filename pattern will go into 
+also can have many columns. All columns *not* in the filename pattern will go into
 the directory part of the path. Here is a simple example:
 
 ```python
@@ -101,7 +104,7 @@ the directory part of the path. Here is a simple example:
       .filter(rho=1)
       .generate_paths("{theta}__{seed}.tsv", dir="results"))
 >>> print(df['path'].to_list()[:2])
-['results/rho__1/eps__0.001/theta__1__seed__365780996487948558.tsv', 
+['results/rho__1/eps__0.001/theta__1__seed__365780996487948558.tsv',
  'results/rho__1/eps__0.001/theta__1__seed__472337310787310937.tsv']
 ```
 
@@ -113,7 +116,7 @@ the file path for each result. Then you can write the samples as TSV:
 ```
 
 You probably wouldn't want ever want to not put the seed column into the
-filename, but `GridDf` would allow it. You can see here how it would 
+filename, but `GridDf` would allow it. You can see here how it would
 structure the filepath:
 
 
