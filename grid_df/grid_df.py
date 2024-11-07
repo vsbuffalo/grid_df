@@ -495,7 +495,6 @@ class GridDf:
         returns:
             GridDf
         """
-        dir = self.dir
         paths = self._ensure_paths()
 
         exists = []
@@ -530,11 +529,9 @@ class GridDf:
                   the number of missing files, and the total size of existing files.
         """
         total_files = df.shape[0]
-        existing_files = df.filter(pl.col("exists") == True).shape[0]
+        existing_files = df.filter(pl.col("exists")).shape[0]
         missing_files = total_files - existing_files
-        total_size = (
-            df.filter(pl.col("exists") == True)["size"].fill_null(value=0).sum()
-        )
+        total_size = df.filter(pl.col("exists"))["size"].fill_null(value=0).sum()
 
         summary = {
             "total_files": total_files,
