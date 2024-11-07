@@ -9,6 +9,11 @@ on:
   release:
     types: [published]
 
+
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -73,36 +78,36 @@ jobs:
         black --check .
 
   publish:
+    name: pypi-publish
     needs: [test, lint]
     runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/p/grid_df
+    permissions:
+      id-token: write
+      contents: read
     if: github.event_name == 'release' && github.event.action == 'published'
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-
     - name: Install uv
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
     - name: Setup virtual environment and install build dependencies
       run: |
         uv venv
         source .venv/bin/activate
         uv pip install build
-
     - name: Build package
       run: |
         source .venv/bin/activate
         python -m build
-
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        verbose: true
