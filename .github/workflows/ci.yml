@@ -41,11 +41,11 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        uvx --python=3.12 ruff check .
+        uvx ruff check .
 
     - name: Check formatting with black
       run: |
-        uvx --python=3.12 black --check .
+        uvx black --check .
 
   publish:
     name: pypi-publish
@@ -65,7 +65,7 @@ jobs:
 
     - name: Build package
       run: |
-        uv build --python=3.12
+        uv build
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
